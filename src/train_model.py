@@ -11,7 +11,8 @@ from feature_func import (
     RANDOM_SEED
 )
 
-BASE_PATH = os.path.join(os.getcwd(), '../')
+FILEPATH = os.path.dirname(os.path.abspath(__file__))
+BASE_PATH = os.path.join(FILEPATH, '../')
 DATA_PATH = get_path(BASE_PATH, "data")
 ORIGINAL_DATA_PATH = get_path(DATA_PATH, "original")
 FINAL_DATA_PATH = get_path(DATA_PATH, "final")

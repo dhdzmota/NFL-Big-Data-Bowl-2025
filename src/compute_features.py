@@ -29,7 +29,9 @@ from graph_feature import (
 NB_TRACKS = 8
 SECONDS = 0.5
 
-BASE_PATH = os.path.join(os.getcwd(), '../')
+
+FILEPATH = os.path.dirname(os.path.abspath(__file__))
+BASE_PATH = os.path.join(FILEPATH, '../')
 DATA_PATH = get_path(BASE_PATH, "data")
 ORIGINAL_DATA_PATH = get_path(DATA_PATH, "original")
 FINAL_DATA_PATH = get_path(DATA_PATH, "final")
