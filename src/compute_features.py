@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import pickle
 import numpy as np
 
 from functools import reduce
@@ -17,6 +18,7 @@ from feature_func import (
     general_vs_team_dist_metrics_info,
     most_influence_info,
     not_futball_columns,
+    RANDOM_SEED
 )
 from graph_feature import (
     get_graph_with_nodes_attrs,
@@ -26,7 +28,6 @@ from graph_feature import (
 
 NB_TRACKS = 8
 SECONDS = 0.5
-RANDOM_SEED = 42
 
 BASE_PATH = os.path.join(os.getcwd(), '../')
 DATA_PATH = get_path(BASE_PATH, "data")
@@ -39,6 +40,14 @@ PLAYS_PATH = get_path(ORIGINAL_DATA_PATH, "plays.csv")
 TRACKING_PATH = get_path(ORIGINAL_DATA_PATH, "tracking")
 POSITION_DICT_PATH = get_path(ORIGINAL_DATA_PATH, "position_dictionary.csv")
 FINAL_FEATURES_PATH = get_path(FINAL_DATA_PATH, 'final_features.csv')
+
+MODEL_PATH = get_path(BASE_PATH, "models")
+FINAL_MODEL_PATH = get_path(MODEL_PATH, "final_model")
+ENCODER0_PATH = get_path(FINAL_MODEL_PATH, 'lb_player_position.pkl')
+ENCODER1_PATH = get_path(FINAL_MODEL_PATH, 'lb_player_position_group.pkl')
+ENCODER2_PATH = get_path(FINAL_MODEL_PATH, 'lb_player_position_subgroup.pkl')
+ENCODER3_PATH = get_path(FINAL_MODEL_PATH, 'presnap_event_encoder.pkl')
+DIMREDU0_PATH = get_path(FINAL_MODEL_PATH, 'pca_model.pkl')
 
 
 def read_data(nb_tracks=1):
@@ -414,7 +423,12 @@ def compute_before_snap_stuff(
         BS_bs_w_player_info
     )
 
-    return event_list_before_snap, BS_ls_w_player_info, BS_bs_w_player_info
+    return (
+        event_list_before_snap,
+        BS_ls_w_player_info,
+        BS_bs_w_player_info,
+        presnap_event_encoder
+    )
 
 
 def get_general_reduced_tracking_w_player_info(
@@ -587,18 +601,19 @@ def get_embeddings_w_dim_red_graph(graphs_whole_team):
     return graphs_whole_team_feather_embeddings_df_reduced, pca_model
 
 
-def feature_computation():
-    pass
-
-
-
 if __name__ == '__main__':
     # We are using ds as placeholder for data
-    ds = read_data(nb_tracks=1)
+    ds = read_data(nb_tracks=NB_TRACKS)
+    print('Read all data.')
     games_df, players_df, play_df, position_dictionary_df, tracking_df = ds
+    print('Getting games_df, players_df, plays_df,'
+          ' position_dictionary_df and tracking_df')
     slight_data_modifications(tracking_df, players_df)
+    print('Slight data modifications to tracking_df and players_df')
     ds = information_after_snap(tracking_df)
     after_snap_tracking_df, plays_with_response_variable = ds
+    print('Got information from the after_snap'
+          ' perpsective with the response var')
     event_occurence = get_event_ocurrence_df(
         after_snap_tracking_df, plays_with_response_variable
     )
@@ -606,34 +621,45 @@ if __name__ == '__main__':
     reorgainzed_sample_event_occurence = sample_event_occurence.sample(
         frac=1, random_state=RANDOM_SEED
     )
+    print('Computed event occurence, got a sample of non-events')
     current_event_stuff = get_current_event_stuff(
         reorgainzed_sample_event_occurence
     )
+    print('Get current context')
     reduced_play_df = get_reduced_play_df(
         reorgainzed_sample_event_occurence, play_df, games_df
     )
-
+    print('Reduced plays according to sampled events.')
     ds = get_reduced_tracking_w_player_info(
         tracking_df,
         reorgainzed_sample_event_occurence,
         players_df,
         reduced_play_df
     )
-    reduced_tracking_w_player_info_df, position_encoders = ds
 
+    reduced_tracking_w_player_info_df, position_encoders = ds
+    lb_player_position = position_encoders[0]
+    lb_player_position_group = position_encoders[1]
+    lb_player_position_subgroup = position_encoders[2]
+    print('Getting reduced_tracking with player information.')
+    print('Getting encoders.')
     unique_sample_event_occurence = get_unique_gameId_playId(
         sample_event_occurence
     )
+    print('Got unique gameId and playId from sample events.')
     ds = compute_before_snap_stuff(
         tracking_df,
         unique_sample_event_occurence,
         players_df,
         reduced_play_df
     )
-    event_list_before_snap, BS_ls_w_player_info, BS_bs_w_player_info = ds
-    before_snap_ls_w_player_info = BS_ls_w_player_info
-    before_snap_bs_w_player_info = BS_bs_w_player_info
+    print('Computing before snap information.')
+    event_list_before_snap = ds[0]
+    before_snap_ls_w_player_info = ds[1]
+    before_snap_bs_w_player_info = ds[2]
+    presnap_event_encoder = ds[3]
 
+    print('Getting general reduced tracking information.')
     ds = get_general_reduced_tracking_w_player_info(
         reduced_tracking_w_player_info_df,
         before_snap_ls_w_player_info,
@@ -642,7 +668,7 @@ if __name__ == '__main__':
     general_reduced_tracking_w_player_info_df =  ds[0]
     #line_set_general_reduced_tracking_w_player_info_df = ds[1]
     #ball_snap_general_reduced_tracking_w_player_info_df = ds[2]
-
+    print('Getting influence of players in field.')
     ds = get_most_influence_info(
         reduced_tracking_w_player_info_df,
         before_snap_ls_w_player_info,
@@ -651,11 +677,11 @@ if __name__ == '__main__':
     most_influence_info_df = ds[0]
     #line_set_most_influence_info = ds[1]
     #ball_snap_most_influence_info = ds[2]
-
+    print('Getting general and team distance metrics.')
     general_vs_team_distance_metrics_df = general_vs_team_dist_metrics_info(
         reduced_tracking_w_player_info_df
     )
-
+    print('Getting football information.')
     ds = get_football_info(
         reduced_tracking_w_player_info_df,
         general_reduced_tracking_w_player_info_df,
@@ -664,11 +690,14 @@ if __name__ == '__main__':
     min_distances_to_ball_possesion = ds[1]
     min_distances_to_ball_defensive = ds[2]
 
+    print('Computing graphs for whole team.')
     graphs_whole_team = get_graph_whole_team(reduced_tracking_w_player_info_df)
+    print('Getting graphs embeddings.')
     ds = get_embeddings_w_dim_red_graph(graphs_whole_team)
     graphs_whole_team_feather_embeddings_df_reduced = ds[0]
     pca_model = ds[1]
 
+    print('Joining all the relevant features.')
     results_df_list = [
         # Initial play context
         reduced_play_df.drop('team_deffinition', axis=1),
@@ -695,5 +724,26 @@ if __name__ == '__main__':
             left, right, left_index=True, right_index=True, how='left'
         ), results_df_list
     )
+    print('Saving features at.', FINAL_FEATURES_PATH)
 
     all_features.to_csv(FINAL_FEATURES_PATH)
+
+    print('Saving lb_player_position enconder at.', ENCODER0_PATH)
+    with open(ENCODER0_PATH, 'wb') as f:
+        pickle.dump(lb_player_position, f)
+
+    print('Saving lb_player_position_group enconder at.', ENCODER1_PATH)
+    with open(ENCODER1_PATH, 'wb') as f:
+        pickle.dump(lb_player_position_group, f)
+
+    print('Saving lb_player_position_subgroup enconder at.', ENCODER2_PATH)
+    with open(ENCODER2_PATH, 'wb') as f:
+        pickle.dump(lb_player_position_subgroup, f)
+
+    print('Saving presnap_event_encoder enconder at.', ENCODER3_PATH)
+    with open(ENCODER3_PATH, 'wb') as f:
+        pickle.dump(presnap_event_encoder, f)
+
+    print('Saving pca_model enconder at.', DIMREDU0_PATH)
+    with open(DIMREDU0_PATH, 'wb') as f:
+        pickle.dump(pca_model, f)

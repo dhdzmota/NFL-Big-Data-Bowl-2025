@@ -5,6 +5,8 @@ import scipy.spatial as ss
 
 from sklearn.preprocessing import LabelEncoder
 
+RANDOM_SEED = 42
+
 elemental_columns = [
     'nflId',
     'x',
