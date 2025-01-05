@@ -60,6 +60,6 @@ only information required to train the model.
 `python general_pipeline.py`, this will automatically execute the corresponding
 scripts to create features and train the model locally which will be saved at 
 `models` file. 
-- Step 3: Open jupyter notebook and go to the `notebooks` folder, open the 
-`model_use.ipynb` to use the notebook on a dataset who was never used for 
-training. 
+- Step 3: To see how to use the model, you can quickly use the file on `src`
+named `model_use.py`, which will yield from a specific gameId and playId, the
+corresponding model predictions.
