@@ -56,9 +56,10 @@ original folder should contain `games.csv`, `player_play.csv`, `plays.csv`,
 additional folder inside `tracking`. This second folder should contain files 
 with the names from tracking_week_1.csv to tracking_week_9.csv. This is the 
 only information required to train the model.
-- Step 2: Go to src, and there, execute the following command: 
+- Step 2: In root location, execute the following command: 
 `python general_pipeline.py`, this will automatically execute the corresponding
-scripts to create features and train the model locally. 
+scripts to create features and train the model locally which will be saved at 
+`models` file. 
 - Step 3: Open jupyter notebook and go to the `notebooks` folder, open the 
 `model_use.ipynb` to use the notebook on a dataset who was never used for 
 training. 
