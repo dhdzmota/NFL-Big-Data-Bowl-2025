@@ -1,6 +1,6 @@
 # NFL Big Data Bowl 2025
 
-## Predicting Forward Pass Probabilities in NFL Plays: _A Graph-Based Approach_
+## Predicting Complete Pass Probabilities with Graphs
 Metric Track | Authors: Daniel Hernández, Javier de Alba
 
 The report can be viewed in the `reports` folder, as two documents:
