@@ -1,5 +1,14 @@
 # NFL Big Data Bowl 2025
 
+## Predicting Forward Pass Probabilities in NFL Plays: _A Graph-Based Approach_
+Metric Track | Authors: Daniel Hernández, Javier de Alba
+
+The report can be viewed in the `reports` folder, as two documents:
+- html format: `final_report.html`
+- Notebook format: `final_report.ipynb`
+
+You can also access the report online in Kaggle at this [link](https://www.kaggle.com/code/javodealba/predicting-forward-pass-probabilities-in-nfl-plays).
+
 
 Project Organization
 ------------
