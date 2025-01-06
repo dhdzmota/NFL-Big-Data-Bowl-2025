@@ -55,11 +55,11 @@ Project Organization
 
 Steps
 -------------
-Steps to succesfully execute the code and have your own model at hand:
+Steps to successfully execute the code and have your own model locally:
 - Step 0: Create a virtual environment, and execute 
 `pip install -r requierements.txt` command.
-- Step 1: Manually download the data from the competition and github (if 
-cloned, the github data should be already at `data/original` path). The 
+- Step 1: Manually download the data from the competition and github (if you have already 
+cloned this repo, the github data should be already at `data/original` path). The 
 original folder should contain `games.csv`, `player_play.csv`, `plays.csv`, 
 `players.csv`, a handcrafted dataset `position_dictionary.csv` and an 
 additional folder inside `tracking`. This second folder should contain files 
